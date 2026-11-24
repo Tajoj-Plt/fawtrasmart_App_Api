@@ -1,0 +1,2184 @@
+{
+	"info": {
+		"_postman_id": "8b2d4f61-3a9e-4c7b-a1d5-6e0f2c9b7a34",
+		"name": "FawtraSmart Mobile — Sales (Node)",
+		"description": "Sales section of the FawtraSmart mobile backend (Node.js / Express), base `{{base_url}}/api/v1`.\n\nSuggested order: Auth → Login; Invoices → Create Data, Catalog, Create Invoice (stores invoice_id / invoice_item_id); Payments; Returns; Credit Notes; Exchanges; Quotes / Sales Orders; Daily Closing & Me.\nSet client_id to a client in your scope. Every request sends Accept: application/json. Responses: { success, data } / { success, message, data }; errors: { success:false, error:{ code, message, details? } }.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login — تسجيل الدخول",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Fill email and password. Stores data.accessToken into the collection variable token.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"\",\n    \"password\": \"\",\n    \"device\": {\n        \"id\": \"postman\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"if (json && json.data && json.data.accessToken) {",
+									"    pm.collectionVariables.set(\"token\", json.data.accessToken);",
+									"    console.log(\"Token saved to collection variable.\");",
+									"}"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Invoices — الفواتير",
+			"item": [
+				{
+					"name": "Create Data — بيانات الشاشة",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/invoices/create-data",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"invoices",
+								"create-data"
+							]
+						},
+						"description": "الصلاحية: sales.invoices.create — الإعدادات والضرائب ومستودعات البيع والخزائن. يحفظ warehouse_id."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.warehouses[0].id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"warehouse_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Catalog — الكتالوج",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/catalog?warehouseId={{warehouse_id}}&search=&page=&perPage=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"catalog"
+							],
+							"query": [
+								{
+									"key": "warehouseId",
+									"value": "{{warehouse_id}}",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "search",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "page",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "perPage",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								}
+							]
+						},
+						"description": "الصلاحية: sales.invoices.create — يحفظ product_id."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.items[0].id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"product_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Price List Price — سعر القائمة",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/price?priceListId=&productId={{product_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"price"
+							],
+							"query": [
+								{
+									"key": "priceListId",
+									"value": "",
+									"disabled": false,
+									"description": ""
+								},
+								{
+									"key": "productId",
+									"value": "{{product_id}}",
+									"disabled": false,
+									"description": ""
+								}
+							]
+						},
+						"description": "الصلاحية: sales.invoices.create"
+					},
+					"response": []
+				},
+				{
+					"name": "Check Coupon — فحص كوبون",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/coupons/check",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"coupons",
+								"check"
+							]
+						},
+						"description": "الصلاحية: sales.invoices.create",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"CODE\",\n    \"clientId\": {{client_id}},\n    \"amount\": 100,\n    \"productIds\": [\n        {{product_id}}\n    ],\n    \"shippingCost\": 0\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Invoices — القائمة",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/invoices?page=1&perPage=10&search=&status=&period=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"invoices"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "perPage",
+									"value": "10"
+								},
+								{
+									"key": "search",
+									"value": ""
+								},
+								{
+									"key": "status",
+									"value": ""
+								},
+								{
+									"key": "period",
+									"value": ""
+								}
+							]
+						},
+						"description": "الصلاحية: sales.invoices.view"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Invoice — إصدار فاتورة",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/invoices",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"invoices"
+							]
+						},
+						"description": "الصلاحية: sales.invoices.create — الموظف بلا تجاوز الموقع يرسل currentLatitude/currentLongitude. يحفظ invoice_id و invoice_item_id.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"clientId\": {{client_id}},\n    \"warehouseId\": {{warehouse_id}},\n    \"discountAmount\": 0,\n    \"discountType\": \"amount\",\n    \"shippingCost\": 0,\n    \"isPaid\": false,\n    \"advancePayment\": 0,\n    \"items\": [\n        {\n            \"productId\": {{product_id}},\n            \"quantity\": 1,\n            \"unitPrice\": 10,\n            \"discount\": 0,\n            \"discountType\": \"amount\",\n            \"tax1Id\": null\n        }\n    ],\n    \"currentLatitude\": null,\n    \"currentLongitude\": null\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"invoice_id\", v); } } catch (e) {}",
+									"try { const v = json.data.items[0].id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"invoice_item_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Show Invoice — عرض",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/invoices/{{invoice_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"invoices",
+								"{{invoice_id}}"
+							]
+						},
+						"description": "الصلاحية: sales.invoices.view"
+					},
+					"response": []
+				},
+				{
+					"name": "Print Invoice — طباعة",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/invoices/{{invoice_id}}/print",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"invoices",
+								"{{invoice_id}}",
+								"print"
+							]
+						},
+						"description": "الصلاحية: sales.invoices.print"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Payments — التحصيل",
+			"item": [
+				{
+					"name": "Create Data — بيانات الشاشة",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/payments/create-data",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"payments",
+								"create-data"
+							]
+						},
+						"description": "الصلاحية: sales.payments.create"
+					},
+					"response": []
+				},
+				{
+					"name": "Client Unpaid Invoices — مستحقات العميل",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/clients/{{client_id}}/unpaid-invoices",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"clients",
+								"{{client_id}}",
+								"unpaid-invoices"
+							]
+						},
+						"description": "الصلاحية: sales.payments.view"
+					},
+					"response": []
+				},
+				{
+					"name": "Collect — سند قبض",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/payments",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"payments"
+							]
+						},
+						"description": "الصلاحية: sales.payments.create — يحفظ payment_id.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"invoiceId\": {{invoice_id}},\n    \"amount\": 1,\n    \"paymentDate\": null,\n    \"treasuryId\": null,\n    \"paymentMethod\": null,\n    \"notes\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"payment_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Bulk Collect — دفع مجمّع",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/payments/bulk",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"payments",
+								"bulk"
+							]
+						},
+						"description": "الصلاحية: sales.payments.bulk — الأقدم أولاً.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"clientId\": {{client_id}},\n    \"amount\": 100,\n    \"invoiceIds\": [\n        {{invoice_id}}\n    ],\n    \"paymentDate\": null,\n    \"treasuryId\": null\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Payments — القائمة",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/payments?page=1&perPage=10&search=&status=&period=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"payments"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "perPage",
+									"value": "10"
+								},
+								{
+									"key": "search",
+									"value": ""
+								},
+								{
+									"key": "status",
+									"value": ""
+								},
+								{
+									"key": "period",
+									"value": ""
+								}
+							]
+						},
+						"description": "الصلاحية: sales.payments.view"
+					},
+					"response": []
+				},
+				{
+					"name": "Show Payment — عرض",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/payments/{{payment_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"payments",
+								"{{payment_id}}"
+							]
+						},
+						"description": "الصلاحية: sales.payments.view"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Returns — المرتجعات",
+			"item": [
+				{
+					"name": "Return Data — بيانات المرتجع",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/invoices/{{invoice_id}}/return-data",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"invoices",
+								"{{invoice_id}}",
+								"return-data"
+							]
+						},
+						"description": "الصلاحية: sales.returns.create"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Return — مرتجع",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/returns",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"returns"
+							]
+						},
+						"description": "الصلاحية: sales.returns.create — البنود من الفاتورة نفسها. يحفظ return_id.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"invoiceId\": {{invoice_id}},\n    \"items\": [\n        {\n            \"invoiceItemId\": {{invoice_item_id}},\n            \"quantity\": 1\n        }\n    ],\n    \"includeShipping\": false,\n    \"refund\": false,\n    \"treasuryId\": null\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"return_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "List Returns — القائمة",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/returns?page=1&perPage=10&search=&status=&period=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"returns"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "perPage",
+									"value": "10"
+								},
+								{
+									"key": "search",
+									"value": ""
+								},
+								{
+									"key": "status",
+									"value": ""
+								},
+								{
+									"key": "period",
+									"value": ""
+								}
+							]
+						},
+						"description": "الصلاحية: sales.returns.view"
+					},
+					"response": []
+				},
+				{
+					"name": "Show Return — عرض",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/returns/{{return_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"returns",
+								"{{return_id}}"
+							]
+						},
+						"description": "الصلاحية: sales.returns.view"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Credit Notes — الإشعارات الدائنة",
+			"item": [
+				{
+					"name": "Create Data — بيانات الشاشة",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/credit-notes/create-data?clientId={{client_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"credit-notes",
+								"create-data"
+							],
+							"query": [
+								{
+									"key": "clientId",
+									"value": "{{client_id}}",
+									"disabled": false,
+									"description": ""
+								}
+							]
+						},
+						"description": "الصلاحية: sales.credit_notes.create"
+					},
+					"response": []
+				},
+				{
+					"name": "Settlement Preview — معاينة التسوية",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/credit-notes/settlement-preview?clientId={{client_id}}&amount=10&invoiceId=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"credit-notes",
+								"settlement-preview"
+							],
+							"query": [
+								{
+									"key": "clientId",
+									"value": "{{client_id}}",
+									"disabled": false,
+									"description": ""
+								},
+								{
+									"key": "amount",
+									"value": "10",
+									"disabled": false,
+									"description": ""
+								},
+								{
+									"key": "invoiceId",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								}
+							]
+						},
+						"description": "الصلاحية: sales.credit_notes.create"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Credit Note — إشعار دائن",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/credit-notes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"credit-notes"
+							]
+						},
+						"description": "الصلاحية: sales.credit_notes.create — على فاتورة: items[{invoiceItemId, quantity}]؛ بلا فاتورة: items[{productId, quantity, unitPrice, warehouseId}]. يحفظ credit_note_id.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"clientId\": {{client_id}},\n    \"invoiceId\": {{invoice_id}},\n    \"items\": [\n        {\n            \"invoiceItemId\": {{invoice_item_id}},\n            \"quantity\": 1\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"credit_note_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "List Credit Notes — القائمة",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/credit-notes?page=1&perPage=10&search=&status=&period=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"credit-notes"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "perPage",
+									"value": "10"
+								},
+								{
+									"key": "search",
+									"value": ""
+								},
+								{
+									"key": "status",
+									"value": ""
+								},
+								{
+									"key": "period",
+									"value": ""
+								}
+							]
+						},
+						"description": "الصلاحية: sales.credit_notes.view"
+					},
+					"response": []
+				},
+				{
+					"name": "Show Credit Note — عرض",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/credit-notes/{{credit_note_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"credit-notes",
+								"{{credit_note_id}}"
+							]
+						},
+						"description": "الصلاحية: sales.credit_notes.view"
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Credit Note — إلغاء",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/credit-notes/{{credit_note_id}}/cancel",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"credit-notes",
+								"{{credit_note_id}}",
+								"cancel"
+							]
+						},
+						"description": "الصلاحية: sales.credit_notes.cancel + data_scope_all"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Exchanges — تبديل البضاعة",
+			"item": [
+				{
+					"name": "Reasons — الأسباب",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/exchange-reasons",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"exchange-reasons"
+							]
+						},
+						"description": "الصلاحية: sales.exchanges.view"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Data — بيانات الشاشة",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/exchanges/create-data",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"exchanges",
+								"create-data"
+							]
+						},
+						"description": "الصلاحية: sales.exchanges.create"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Exchange — تبديل",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/exchanges",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"exchanges"
+							]
+						},
+						"description": "الصلاحية: sales.exchanges.create — multipart: الصورة إلزامية، items نصّ JSON. يحفظ exchange_id.",
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "clientId",
+									"value": "{{client_id}}",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "storehouseId",
+									"value": "{{warehouse_id}}",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "returnStorehouseId",
+									"value": "",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "items",
+									"value": "[{\"productId\":0,\"quantity\":1,\"reasonId\":1}]",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "image",
+									"type": "file",
+									"src": [],
+									"disabled": false
+								},
+								{
+									"key": "notes",
+									"value": "",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"exchange_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "List Exchanges — القائمة",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/exchanges?clientId=&page=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"exchanges"
+							],
+							"query": [
+								{
+									"key": "clientId",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "page",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								}
+							]
+						},
+						"description": "الصلاحية: sales.exchanges.view"
+					},
+					"response": []
+				},
+				{
+					"name": "Show Exchange — عرض",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/exchanges/{{exchange_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"exchanges",
+								"{{exchange_id}}"
+							]
+						},
+						"description": "الصلاحية: sales.exchanges.view"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Quotes — عروض الأسعار",
+			"item": [
+				{
+					"name": "List — القائمة",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/quotes?page=1&perPage=10&search=&status=&period=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"quotes"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "perPage",
+									"value": "10"
+								},
+								{
+									"key": "search",
+									"value": ""
+								},
+								{
+									"key": "status",
+									"value": ""
+								},
+								{
+									"key": "period",
+									"value": ""
+								}
+							]
+						},
+						"description": "الصلاحية: sales.quotes.view"
+					},
+					"response": []
+				},
+				{
+					"name": "Create — إنشاء",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/quotes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"quotes"
+							]
+						},
+						"description": "الصلاحية: sales.quotes.create — يحفظ quote_id.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"clientId\": {{client_id}},\n    \"expiryDate\": null,\n    \"discountAmount\": 0,\n    \"discountType\": \"amount\",\n    \"shippingCost\": 0,\n    \"taxType\": 1,\n    \"items\": [\n        {\n            \"productId\": {{product_id}},\n            \"quantity\": 1,\n            \"unitPrice\": 10,\n            \"discount\": 0,\n            \"discountType\": \"amount\",\n            \"tax1Id\": null\n        }\n    ],\n    \"notes\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"quote_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Show — عرض",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/quotes/{{quote_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"quotes",
+								"{{quote_id}}"
+							]
+						},
+						"description": "الصلاحية: sales.quotes.view"
+					},
+					"response": []
+				},
+				{
+					"name": "Update — تعديل",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/quotes/{{quote_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"quotes",
+								"{{quote_id}}"
+							]
+						},
+						"description": "الصلاحية: sales.quotes.edit",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"clientId\": {{client_id}},\n    \"expiryDate\": null,\n    \"discountAmount\": 0,\n    \"discountType\": \"amount\",\n    \"shippingCost\": 0,\n    \"taxType\": 1,\n    \"items\": [\n        {\n            \"productId\": {{product_id}},\n            \"quantity\": 1,\n            \"unitPrice\": 10,\n            \"discount\": 0,\n            \"discountType\": \"amount\",\n            \"tax1Id\": null\n        }\n    ],\n    \"notes\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Convert To Invoice — تحويل إلى فاتورة",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/quotes/{{quote_id}}/convert",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"quotes",
+								"{{quote_id}}",
+								"convert"
+							]
+						},
+						"description": "الصلاحية: sales.quotes.convert — بمحرّك الفاتورة نفسه.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"warehouseId\": {{warehouse_id}}\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete — حذف",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/quotes/{{quote_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"quotes",
+								"{{quote_id}}"
+							]
+						},
+						"description": "الصلاحية: sales.quotes.delete"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Sales Orders — أوامر البيع",
+			"item": [
+				{
+					"name": "List — القائمة",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/sales-orders?clientId=&status=&page=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"sales-orders"
+							],
+							"query": [
+								{
+									"key": "clientId",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "status",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "page",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								}
+							]
+						},
+						"description": "الصلاحية: sales.sales_orders.view"
+					},
+					"response": []
+				},
+				{
+					"name": "Create — إنشاء",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/sales-orders",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"sales-orders"
+							]
+						},
+						"description": "الصلاحية: sales.sales_orders.create — يحفظ sales_order_id.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"clientId\": {{client_id}},\n    \"expiryDate\": null,\n    \"discountAmount\": 0,\n    \"discountType\": \"amount\",\n    \"shippingCost\": 0,\n    \"taxType\": 1,\n    \"items\": [\n        {\n            \"productId\": {{product_id}},\n            \"quantity\": 1,\n            \"unitPrice\": 10,\n            \"discount\": 0,\n            \"discountType\": \"amount\",\n            \"tax1Id\": null\n        }\n    ],\n    \"notes\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"sales_order_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Show — عرض",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/sales-orders/{{sales_order_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"sales-orders",
+								"{{sales_order_id}}"
+							]
+						},
+						"description": "الصلاحية: sales.sales_orders.view"
+					},
+					"response": []
+				},
+				{
+					"name": "Update — تعديل",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/sales-orders/{{sales_order_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"sales-orders",
+								"{{sales_order_id}}"
+							]
+						},
+						"description": "الصلاحية: sales.sales_orders.edit",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"clientId\": {{client_id}},\n    \"expiryDate\": null,\n    \"discountAmount\": 0,\n    \"discountType\": \"amount\",\n    \"shippingCost\": 0,\n    \"taxType\": 1,\n    \"items\": [\n        {\n            \"productId\": {{product_id}},\n            \"quantity\": 1,\n            \"unitPrice\": 10,\n            \"discount\": 0,\n            \"discountType\": \"amount\",\n            \"tax1Id\": null\n        }\n    ],\n    \"notes\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Convert To Invoice — تحويل إلى فاتورة",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/sales-orders/{{sales_order_id}}/convert",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"sales-orders",
+								"{{sales_order_id}}",
+								"convert"
+							]
+						},
+						"description": "الصلاحية: sales.sales_orders.convert — بمحرّك الفاتورة نفسه.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"warehouseId\": {{warehouse_id}}\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete — حذف",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/sales-orders/{{sales_order_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"sales-orders",
+								"{{sales_order_id}}"
+							]
+						},
+						"description": "الصلاحية: sales.sales_orders.delete"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Daily Closing & Me — الإقفال وأهدافي",
+			"item": [
+				{
+					"name": "Closings — الإقفالات",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/daily-closing?fromDate=&toDate=&employeeId=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"daily-closing"
+							],
+							"query": [
+								{
+									"key": "fromDate",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "toDate",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "employeeId",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								}
+							]
+						},
+						"description": "الصلاحية: sales.daily_closing.view"
+					},
+					"response": []
+				},
+				{
+					"name": "System Data — أرقام النظام",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/daily-closing/system-data?date=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"daily-closing",
+								"system-data"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "",
+									"disabled": false,
+									"description": "YYYY-MM-DD"
+								}
+							]
+						},
+						"description": "الصلاحية: sales.daily_closing.review"
+					},
+					"response": []
+				},
+				{
+					"name": "Stock Products — مخزوني",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/daily-closing/stock-products?date=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"daily-closing",
+								"stock-products"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								}
+							]
+						},
+						"description": "الصلاحية: sales.daily_closing.create"
+					},
+					"response": []
+				},
+				{
+					"name": "Close Day — إقفال يدوي",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/daily-closing",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"daily-closing"
+							]
+						},
+						"description": "الصلاحية: sales.daily_closing.create — يجب أن تطابق الأرقامُ أرقامَ النظام.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"date\": \"\",\n    \"reportedSales\": 0,\n    \"reportedCashSales\": 0,\n    \"reportedReceipts\": 0,\n    \"reportedReturns\": 0,\n    \"reportedCashRefunds\": 0,\n    \"reportedExpenses\": 0,\n    \"stockProducts\": []\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Auto Close — إقفال تلقائي",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/daily-closing/auto",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"daily-closing",
+								"auto"
+							]
+						},
+						"description": "الصلاحية: sales.daily_closing.auto_close أو review",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"date\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "My Targets — أهدافي",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/my/targets?fromDate=&toDate=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"my",
+								"targets"
+							],
+							"query": [
+								{
+									"key": "fromDate",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "toDate",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								}
+							]
+						},
+						"description": "ميزة الباقة target_settings"
+					},
+					"response": []
+				},
+				{
+					"name": "My Commissions — عمولاتي",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/my/commissions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"my",
+								"commissions"
+							]
+						},
+						"description": "الصلاحية: sales.commissions.view"
+					},
+					"response": []
+				},
+				{
+					"name": "Payments By Employee — المدفوعات حسب الموظف",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/sales/reports/payments-by-employee?fromDate=&toDate=&groupBy=employee&view=summary",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sales",
+								"reports",
+								"payments-by-employee"
+							],
+							"query": [
+								{
+									"key": "fromDate",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "toDate",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "groupBy",
+									"value": "employee",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "view",
+									"value": "summary",
+									"disabled": true,
+									"description": ""
+								}
+							]
+						},
+						"description": "الصلاحية: sales.reports.payments_by_employee"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:4000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "client_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "warehouse_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "product_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "invoice_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "invoice_item_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "payment_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "return_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "credit_note_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "exchange_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "quote_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "sales_order_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

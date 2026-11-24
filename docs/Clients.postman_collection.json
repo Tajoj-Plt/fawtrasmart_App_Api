@@ -1,0 +1,2872 @@
+{
+	"info": {
+		"_postman_id": "6b0f2d3e-9a41-4c7e-8f2a-5d1c0b7e4a90",
+		"name": "FawtraSmart Mobile — Clients (Node)",
+		"description": "Clients section of the FawtraSmart mobile backend (Node.js / Express), base `{{base_url}}/api/v1`.\n\nSuggested order:\n1) Auth → Login (stores token)\n2) Clients → Client Form Options, then Add Client (stores client_id, and visit_id when a visit is opened on create)\n3) Contacts & notes → Add Note (stores note_id)\n4) Visit workspace → Open (stores visit_id) → Start → Step 1..4 → Complete (or Cancel)\n   Use the same coordinates (24.7136, 46.6753) for the client and the visit so the proximity check passes.\n\nRequest bodies are camelCase; multipart fields use bracket notation (contacts[0][firstName], competitors[0][photo], attachments[0]).\nEvery request sends Accept: application/json. Responses: { success, data } / { success, message, data }; errors: { success:false, error:{ code, message, details? } }.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login — تسجيل الدخول",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Fill email and password. Stores data.accessToken into the collection variable token.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"\",\n    \"password\": \"\",\n    \"device\": {\n        \"id\": \"postman\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"if (json && json.data && json.data.accessToken) {",
+									"    pm.collectionVariables.set(\"token\", json.data.accessToken);",
+									"    console.log(\"Token saved to collection variable.\");",
+									"}"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Branches & settings — الفروع والإعدادات",
+			"item": [
+				{
+					"name": "Branches — الفروع",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/branches?search=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"branches"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								}
+							]
+						},
+						"description": "الصلاحية: لا شيء. فروع الفلتر المسموحة."
+					},
+					"response": []
+				},
+				{
+					"name": "Client Settings — إعدادات العملاء",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/clients/settings",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"clients",
+								"settings"
+							]
+						},
+						"description": "الصلاحية: لا شيء (وحدة «العملاء» مفعّلة)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Clients — العملاء",
+			"item": [
+				{
+					"name": "Client Form Options — قوائم النموذج",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/clients/options?clientId={{client_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"clients",
+								"options"
+							],
+							"query": [
+								{
+									"key": "clientId",
+									"value": "{{client_id}}",
+									"disabled": true,
+									"description": ""
+								}
+							]
+						},
+						"description": "الصلاحية: clients_add_client | clients_edit_data"
+					},
+					"response": []
+				},
+				{
+					"name": "Clients Map — خريطة العملاء",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/clients/map?search=&branchId=&includeDescendants=1&status=&registrationStage=&categoryId=&type=&region=&neighborhood=&employee=&overCreditLimit=1&customerTargetId=&dateFrom=&dateTo=&lastInvoicePeriod=month&lastPaymentPeriod=month&lastActivityPeriod=month&sort=newest&latitude=24.7136&longitude=46.6753",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"clients",
+								"map"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "",
+									"disabled": true,
+									"description": "name, code, phone, mobile"
+								},
+								{
+									"key": "branchId",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "includeDescendants",
+									"value": "1",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "status",
+									"value": "",
+									"disabled": true,
+									"description": "id or no_status"
+								},
+								{
+									"key": "registrationStage",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "categoryId",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "type",
+									"value": "",
+									"disabled": true,
+									"description": "1 individual / 2 commercial"
+								},
+								{
+									"key": "region",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "neighborhood",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "employee",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "overCreditLimit",
+									"value": "1",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "customerTargetId",
+									"value": "",
+									"disabled": true,
+									"description": "id or no_target"
+								},
+								{
+									"key": "dateFrom",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "dateTo",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "lastInvoicePeriod",
+									"value": "month",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "lastPaymentPeriod",
+									"value": "month",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "lastActivityPeriod",
+									"value": "month",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "sort",
+									"value": "newest",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "latitude",
+									"value": "24.7136",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "longitude",
+									"value": "46.6753",
+									"disabled": true,
+									"description": ""
+								}
+							]
+						},
+						"description": "الصلاحية: clients_view_all_clients | clients_view_own_clients | clients_view_by_employee_groups | clients_view_by_daily_itinerary"
+					},
+					"response": []
+				},
+				{
+					"name": "List Clients — قائمة العملاء",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/clients?page=1&perPage=20&search=&branchId=&includeDescendants=1&status=&registrationStage=&categoryId=&type=&region=&neighborhood=&employee=&overCreditLimit=1&customerTargetId=&dateFrom=&dateTo=&lastInvoicePeriod=month&lastPaymentPeriod=month&lastActivityPeriod=month&sort=newest&latitude=24.7136&longitude=46.6753",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"clients"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"disabled": false,
+									"description": ""
+								},
+								{
+									"key": "perPage",
+									"value": "20",
+									"disabled": false,
+									"description": ""
+								},
+								{
+									"key": "search",
+									"value": "",
+									"disabled": true,
+									"description": "name, code, phone, mobile"
+								},
+								{
+									"key": "branchId",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "includeDescendants",
+									"value": "1",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "status",
+									"value": "",
+									"disabled": true,
+									"description": "id or no_status"
+								},
+								{
+									"key": "registrationStage",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "categoryId",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "type",
+									"value": "",
+									"disabled": true,
+									"description": "1 individual / 2 commercial"
+								},
+								{
+									"key": "region",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "neighborhood",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "employee",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "overCreditLimit",
+									"value": "1",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "customerTargetId",
+									"value": "",
+									"disabled": true,
+									"description": "id or no_target"
+								},
+								{
+									"key": "dateFrom",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "dateTo",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "lastInvoicePeriod",
+									"value": "month",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "lastPaymentPeriod",
+									"value": "month",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "lastActivityPeriod",
+									"value": "month",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "sort",
+									"value": "newest",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "latitude",
+									"value": "24.7136",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "longitude",
+									"value": "46.6753",
+									"disabled": true,
+									"description": ""
+								}
+							]
+						},
+						"description": "الصلاحية: clients_view_all_clients | clients_view_own_clients | clients_view_by_employee_groups | clients_view_by_daily_itinerary"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Client — إضافة عميل",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/clients",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"clients"
+							]
+						},
+						"description": "الصلاحية: clients_add_client — multipart/form-data. الحقول الإلزامية من إعدادات وحدات العملاء؛ code يصدره الخادم.",
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "clientTreeBranchId",
+									"value": "1",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "tradeName",
+									"value": "بقالة النور",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "firstName",
+									"value": "محمد",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "lastName",
+									"value": "العتيبي",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "phone",
+									"value": "0500000001",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "mobile",
+									"value": "0550000001",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "email",
+									"value": "",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "categoryId",
+									"value": "1",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "registrationStageId",
+									"value": "",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "clientType",
+									"value": "2",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "taxNumber",
+									"value": "300000000000003",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "commercialRegistration",
+									"value": "1010000000",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "currency",
+									"value": "SAR",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "printingMethod",
+									"value": "1",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "street1",
+									"value": "شارع الملك فهد",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "city",
+									"value": "الرياض",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "region",
+									"value": "الرياض",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "postalCode",
+									"value": "12345",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "country",
+									"value": "SA",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "notes",
+									"value": "عميل من تطبيق الجوال",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "latitude",
+									"value": "24.7136",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "longitude",
+									"value": "46.6753",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "neighborhoodNameManual",
+									"value": "حي الاختبار",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "attachments",
+									"type": "file",
+									"src": [],
+									"disabled": false
+								},
+								{
+									"key": "employeeClientIds[]",
+									"value": "1",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "contacts[0][firstName]",
+									"value": "أحمد",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "contacts[0][lastName]",
+									"value": "السالم",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "contacts[0][phone]",
+									"value": "0500000002",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "contacts[0][mobile]",
+									"value": "0550000002",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "contacts[0][email]",
+									"value": "",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"client_id\", v); } } catch (e) {}",
+									"try { const v = json.data.visitId; if (v) { pm.collectionVariables.set(\"visit_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Client Details — تفاصيل العميل",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/clients/{{client_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"clients",
+								"{{client_id}}"
+							]
+						},
+						"description": "الصلاحية: clients_view_all_clients | clients_view_own_clients | clients_view_by_employee_groups | clients_view_by_daily_itinerary — قد يُرجع 403 MUST_VISIT_FIRST / VISIT_FINISHED_TODAY"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Client — تعديل عميل",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/clients/{{client_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"clients",
+								"{{client_id}}"
+							]
+						},
+						"description": "الصلاحية: clients_edit_data — multipart/form-data. الموقع يُستبدل فقط إن أُرسل.",
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "clientTreeBranchId",
+									"value": "1",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "tradeName",
+									"value": "بقالة النور (معدَّل)",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "firstName",
+									"value": "محمد",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "lastName",
+									"value": "العتيبي",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "phone",
+									"value": "0500000001",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "mobile",
+									"value": "0550000001",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "email",
+									"value": "",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "categoryId",
+									"value": "1",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "registrationStageId",
+									"value": "",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "clientType",
+									"value": "2",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "taxNumber",
+									"value": "300000000000003",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "commercialRegistration",
+									"value": "1010000000",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "currency",
+									"value": "SAR",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "printingMethod",
+									"value": "1",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "street1",
+									"value": "شارع الملك فهد",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "city",
+									"value": "الرياض",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "region",
+									"value": "الرياض",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "postalCode",
+									"value": "12345",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "country",
+									"value": "SA",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "notes",
+									"value": "عميل من تطبيق الجوال",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "latitude",
+									"value": "24.7136",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "longitude",
+									"value": "46.6753",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "neighborhoodNameManual",
+									"value": "حي الاختبار",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "attachments",
+									"type": "file",
+									"src": [],
+									"disabled": true
+								},
+								{
+									"key": "employeeClientIds[]",
+									"value": "1",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "itemQuantityLimit",
+									"value": "0",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "contacts[0][id]",
+									"value": "",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "contacts[0][firstName]",
+									"value": "أحمد",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "contacts[0][lastName]",
+									"value": "السالم",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "contacts[0][phone]",
+									"value": "0500000002",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "contacts[0][mobile]",
+									"value": "0550000002",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "contacts[0][email]",
+									"value": "",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Status & stage — الحالة والوضع",
+			"item": [
+				{
+					"name": "Status Options — خيارات الحالة",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/clients/{{client_id}}/status-options",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"clients",
+								"{{client_id}}",
+								"status-options"
+							]
+						},
+						"description": "الصلاحية: clients_change_status"
+					},
+					"response": []
+				},
+				{
+					"name": "Change Status — تغيير الحالة",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/clients/{{client_id}}/status",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"clients",
+								"{{client_id}}",
+								"status"
+							]
+						},
+						"description": "الصلاحية: clients_change_status — managerId إلزامي حين يلزم الاعتماد.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"statusId\": 2,\n    \"managerId\": null,\n    \"notes\": \"المحل مغلق\",\n    \"visitId\": null\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Change Stage — تغيير الوضع",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/clients/{{client_id}}/stage",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"clients",
+								"{{client_id}}",
+								"stage"
+							]
+						},
+						"description": "الصلاحية: clients_change_status — stageId فارغ = بلا وضع؛ managerId إلزامي بلا clients_approve_stage.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"stageId\": null,\n    \"managerId\": null,\n    \"notes\": \"تحديث الوضع\",\n    \"visitId\": null\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Contacts & notes — المسؤولون والملاحظات",
+			"item": [
+				{
+					"name": "Client Contacts — مسؤولو العميل",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/clients/{{client_id}}/contacts",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"clients",
+								"{{client_id}}",
+								"contacts"
+							]
+						},
+						"description": "الصلاحية: client_follow_up_view_notes_attachments_appointments_all | _assigned | _own"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Contact — إضافة مسؤول",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/clients/{{client_id}}/contacts",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"clients",
+								"{{client_id}}",
+								"contacts"
+							]
+						},
+						"description": "الصلاحية: client_follow_up_add_notes_attachments_appointments_all | _assigned | _own | clients_add_employee_note — multipart. shift = full أو HH:00|HH:00",
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "employeeName",
+									"value": "أحمد السالم",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "employeePhone",
+									"value": "0500000002",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "shift",
+									"value": "08:00|16:00",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "employeePosition",
+									"value": "مدير المحل",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "isPrimary",
+									"value": "1",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "invoiceId",
+									"value": "",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "image",
+									"type": "file",
+									"src": [],
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Client Notes — ملاحظات العميل",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/clients/{{client_id}}/notes?page=1&perPage=15",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"clients",
+								"{{client_id}}",
+								"notes"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"disabled": false,
+									"description": ""
+								},
+								{
+									"key": "perPage",
+									"value": "15",
+									"disabled": false,
+									"description": ""
+								}
+							]
+						},
+						"description": "الصلاحية: client_follow_up_view_notes_attachments_appointments_all | _assigned | _own"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Note — إضافة ملاحظة",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/clients/{{client_id}}/notes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"clients",
+								"{{client_id}}",
+								"notes"
+							]
+						},
+						"description": "الصلاحية: client_follow_up_add_notes_attachments_appointments_all | _assigned | _own | clients_add_employee_note — multipart. clientEmployeeId = مسؤول لهذا العميل؛ الموقع إلزامي ما لم يُعفَ.",
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "clientEmployeeId",
+									"value": "1",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "description",
+									"value": "تمت زيارة العميل ومراجعة الطلبيات",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "depositCount",
+									"value": "0",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "attachments[0]",
+									"type": "file",
+									"src": [],
+									"disabled": false
+								},
+								{
+									"key": "currentLatitude",
+									"value": "24.7136",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "currentLongitude",
+									"value": "46.6753",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "shift",
+									"value": "08:00|16:00",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "process",
+									"value": "",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "siteType",
+									"value": "markets",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"note_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Update Note — تعديل ملاحظة",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/notes/{{note_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"notes",
+								"{{note_id}}"
+							]
+						},
+						"description": "الصلاحية: client_follow_up_edit_delete_notes_attachments_appointments_all | _assigned | _own — multipart. المرفقات الجديدة تُضاف للقديمة.",
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "clientEmployeeId",
+									"value": "1",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "description",
+									"value": "ملاحظة معدّلة",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "depositCount",
+									"value": "0",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "siteType",
+									"value": "markets",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "competitorDocuments",
+									"value": "0",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "shift",
+									"value": "08:00|16:00",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "attachments[0]",
+									"type": "file",
+									"src": [],
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Note Attachment — حذف مرفق",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/notes/{{note_id}}/attachments/0",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"notes",
+								"{{note_id}}",
+								"attachments",
+								"0"
+							]
+						},
+						"description": "الصلاحية: client_follow_up_edit_delete_notes_attachments_appointments_all | _assigned | _own — index من attachments[].index"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Note — حذف ملاحظة",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/notes/{{note_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"notes",
+								"{{note_id}}"
+							]
+						},
+						"description": "الصلاحية: client_follow_up_edit_delete_notes_attachments_appointments_all | _assigned | _own"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Itinerary — خط السير",
+			"item": [
+				{
+					"name": "Itinerary Day — يوم خط السير",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/itinerary/day?date=&employeeId=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"itinerary",
+								"day"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "",
+									"disabled": true,
+									"description": "YYYY-MM-DD"
+								},
+								{
+									"key": "employeeId",
+									"value": "",
+									"disabled": true,
+									"description": "users.id"
+								}
+							]
+						},
+						"description": "الصلاحية: clients_daily_itinerary_view | clients_daily_itinerary_add_for_others"
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.stops[0].id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"row_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Itinerary Employees — المندوبون",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/itinerary/employees",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"itinerary",
+								"employees"
+							]
+						},
+						"description": "الصلاحية: clients_daily_itinerary_view | clients_daily_itinerary_add_for_others"
+					},
+					"response": []
+				},
+				{
+					"name": "Itinerary Client Picker — منتقي العملاء",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/itinerary/clients?q=&nodeId=&employeeId=&date=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"itinerary",
+								"clients"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "nodeId",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "employeeId",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "date",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								}
+							]
+						},
+						"description": "الصلاحية: clients_daily_itinerary_add_client | clients_daily_itinerary_add_for_others"
+					},
+					"response": []
+				},
+				{
+					"name": "Add to Itinerary — إضافة لخط السير",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/itinerary/clients",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"itinerary",
+								"clients"
+							]
+						},
+						"description": "الصلاحية: clients_daily_itinerary_add_client | clients_daily_itinerary_add_for_others — employeeId وdate اختياريان.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"clientIds\": [\n        \"{{client_id}}\"\n    ],\n    \"employeeId\": null,\n    \"date\": null\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Postpone — تأجيل الزيارة",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/itinerary/{{row_id}}/postpone",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"itinerary",
+								"{{row_id}}",
+								"postpone"
+							]
+						},
+						"description": "الصلاحية: clients_itinerary_edit — زيارة مخطّطة لليوم أو بعده."
+					},
+					"response": []
+				},
+				{
+					"name": "Return to Itinerary — إرجاع لخط السير",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/clients/{{client_id}}/return-to-itinerary",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"clients",
+								"{{client_id}}",
+								"return-to-itinerary"
+							]
+						},
+						"description": "الصلاحية: clients_visits_track | clients_itinerary_add | clients_visit_workspace_access | clients_must_visit_before_view"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Visit workspace — مساحة الزيارة",
+			"item": [
+				{
+					"name": "Open Visit — فتح الزيارة",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/clients/{{client_id}}/visits/open",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"clients",
+								"{{client_id}}",
+								"visits",
+								"open"
+							]
+						},
+						"description": "الصلاحية: clients_visits_track | clients_itinerary_add | clients_visit_workspace_access | clients_must_visit_before_view — 201 جديدة / 200 قائمة."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.visitId; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"visit_id\", v); } } catch (e) {}",
+									"try { const v = json.data.clientNotifications[0].id; if (v) { pm.collectionVariables.set(\"notification_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Visit Details — تفاصيل الزيارة",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/visits/{{visit_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"visits",
+								"{{visit_id}}"
+							]
+						},
+						"description": "الصلاحية: clients_visits_track | clients_itinerary_add | clients_visit_workspace_access | clients_must_visit_before_view"
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.clientNotifications[0].id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"notification_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Start — بدء الزيارة",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/visits/{{visit_id}}/start",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"visits",
+								"{{visit_id}}",
+								"start"
+							]
+						},
+						"description": "الصلاحية: clients_visits_track | clients_itinerary_add | clients_visit_workspace_access | clients_must_visit_before_view — ضمن نطاق القرب من موقع العميل.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"currentLatitude\": 24.7136,\n    \"currentLongitude\": 46.6753\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Toggle Pause — إيقاف/استئناف",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/visits/{{visit_id}}/toggle-pause",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"visits",
+								"{{visit_id}}",
+								"toggle-pause"
+							]
+						},
+						"description": "الصلاحية: clients_visits_track | clients_itinerary_add | clients_visit_workspace_access | clients_must_visit_before_view"
+					},
+					"response": []
+				},
+				{
+					"name": "Step 1 Contact — مسؤول العميل",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/visits/{{visit_id}}/contact",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"visits",
+								"{{visit_id}}",
+								"contact"
+							]
+						},
+						"description": "الصلاحية: clients_visits_track | clients_itinerary_add | clients_visit_workspace_access | clients_must_visit_before_view + client_follow_up_add_notes_attachments_appointments_all | _assigned | _own | clients_add_employee_note — multipart.",
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "employeeName",
+									"value": "أحمد السالم",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "employeePhone",
+									"value": "0500000002",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "shift",
+									"value": "08:00|16:00",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "employeePosition",
+									"value": "مدير المحل",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "isPrimary",
+									"value": "1",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "invoiceId",
+									"value": "",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "image",
+									"type": "file",
+									"src": [],
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Step 2 Contact Shift — دوام المسؤول",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/visits/{{visit_id}}/contact-shift",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"visits",
+								"{{visit_id}}",
+								"contact-shift"
+							]
+						},
+						"description": "الصلاحية: clients_visits_track | clients_itinerary_add | clients_visit_workspace_access | clients_must_visit_before_view — تغييره بعد تسجيله يحتاج clients_change_contact_shift.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"clientEmployeeId\": 1,\n    \"shift\": \"08:00|16:00\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Step 3 Visit Note — ملاحظة الزيارة",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/visits/{{visit_id}}/notes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"visits",
+								"{{visit_id}}",
+								"notes"
+							]
+						},
+						"description": "الصلاحية: clients_visits_track | clients_itinerary_add | clients_visit_workspace_access | clients_must_visit_before_view + client_follow_up_add_notes_attachments_appointments_all | _assigned | _own | clients_add_employee_note — multipart.",
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "clientEmployeeId",
+									"value": "1",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "description",
+									"value": "تمت زيارة العميل ومراجعة الطلبيات",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "depositCount",
+									"value": "0",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "attachments[0]",
+									"type": "file",
+									"src": [],
+									"disabled": false
+								},
+								{
+									"key": "currentLatitude",
+									"value": "24.7136",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "currentLongitude",
+									"value": "46.6753",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "shift",
+									"value": "08:00|16:00",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "process",
+									"value": "",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "siteType",
+									"value": "markets",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Step 4 Competitors — رصد المنافسين",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/visits/{{visit_id}}/competitors",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"visits",
+								"{{visit_id}}",
+								"competitors"
+							]
+						},
+						"description": "الصلاحية: clients_visits_track | clients_itinerary_add | clients_visit_workspace_access | clients_must_visit_before_view + client_follow_up_add_notes_attachments_appointments_all | _assigned | _own | clients_add_employee_note — multipart. أو noCompetitors=1 مع noCompetitorsPhoto.",
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "competitors[0][competitorId]",
+									"value": "1",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "competitors[0][assetCount]",
+									"value": "2",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "competitors[0][photo]",
+									"type": "file",
+									"src": [],
+									"disabled": false
+								},
+								{
+									"key": "noCompetitors",
+									"value": "1",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "noCompetitorsPhoto",
+									"type": "file",
+									"src": [],
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Quick Competitor — منافس جديد",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/visits/{{visit_id}}/competitors/quick",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"visits",
+								"{{visit_id}}",
+								"competitors",
+								"quick"
+							]
+						},
+						"description": "الصلاحية: clients_visits_track | clients_itinerary_add | clients_visit_workspace_access | clients_must_visit_before_view + client_follow_up_add_notes_attachments_appointments_all | _assigned | _own | clients_add_employee_note — 201 جديد / 200 موجود.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"شركة المنافس\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Read Client Notification — قراءة إشعار",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/visits/{{visit_id}}/notifications/{{notification_id}}/read",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"visits",
+								"{{visit_id}}",
+								"notifications",
+								"{{notification_id}}",
+								"read"
+							]
+						},
+						"description": "الصلاحية: clients_visits_track | clients_itinerary_add | clients_visit_workspace_access | clients_must_visit_before_view"
+					},
+					"response": []
+				},
+				{
+					"name": "Reply Client Notification — الرد على إشعار",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/visits/{{visit_id}}/notifications/{{notification_id}}/reply",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"visits",
+								"{{visit_id}}",
+								"notifications",
+								"{{notification_id}}",
+								"reply"
+							]
+						},
+						"description": "الصلاحية: clients_visits_track | clients_itinerary_add | clients_visit_workspace_access | clients_must_visit_before_view + notifications_reply_to_notifications",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"replyMessage\": \"تمت المتابعة مع العميل\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Complete — إنهاء الزيارة",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/visits/{{visit_id}}/complete",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"visits",
+								"{{visit_id}}",
+								"complete"
+							]
+						},
+						"description": "الصلاحية: clients_visits_track | clients_itinerary_add | clients_visit_workspace_access | clients_must_visit_before_view + clients_visit_complete — التوقيعان data:image base64 حين يُفعَّل قسم التوقيع.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"currentLatitude\": 24.7136,\n    \"currentLongitude\": 46.6753,\n    \"outcomeNotes\": \"\",\n    \"returnLater\": false,\n    \"returnTime\": null,\n    \"clientSignature\": \"data:image/png;base64,\",\n    \"employeeSignature\": \"data:image/png;base64,\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel — إلغاء الزيارة",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/visits/{{visit_id}}/cancel",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"visits",
+								"{{visit_id}}",
+								"cancel"
+							]
+						},
+						"description": "الصلاحية: clients_visits_track | clients_itinerary_add | clients_visit_workspace_access | clients_must_visit_before_view + clients_visit_cancel",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"cancelReason\": \"المحل مغلق\",\n    \"currentLatitude\": 24.7136,\n    \"currentLongitude\": 46.6753\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Forgotten visits — الزيارات المنسيّة",
+			"item": [
+				{
+					"name": "Forgotten Visits — الزيارات المنسيّة",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/visits/forgotten?scope=own",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"visits",
+								"forgotten"
+							],
+							"query": [
+								{
+									"key": "scope",
+									"value": "own",
+									"disabled": false,
+									"description": "own | all"
+								}
+							]
+						},
+						"description": "الصلاحية: clients_view_forgotten_visits_own | clients_view_forgotten_visits_all"
+					},
+					"response": []
+				},
+				{
+					"name": "Close Forgotten — إنهاء زيارة منسيّة",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/visits/forgotten/{{visit_id}}/close",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"visits",
+								"forgotten",
+								"{{visit_id}}",
+								"close"
+							]
+						},
+						"description": "الصلاحية: clients_close_forgotten_visits_own | clients_force_close_forgotten_visits",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"notes\": \"أُنهيت عن بُعد\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Forgotten — إلغاء زيارة منسيّة",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/visits/forgotten/{{visit_id}}/cancel",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"visits",
+								"forgotten",
+								"{{visit_id}}",
+								"cancel"
+							]
+						},
+						"description": "الصلاحية: clients_cancel_forgotten_visits",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"cancelReason\": \"زيارة فُتحت بالخطأ\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Visit justifications — تبرير الزيارات",
+			"item": [
+				{
+					"name": "Pending Justifications — بانتظار التبرير",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/visit-justifications/pending",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"visit-justifications",
+								"pending"
+							]
+						},
+						"description": "الصلاحية: لا شيء. exempt=true لحامل staff_visit_justification_exempt."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.visits[0].id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"row_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Submit Justifications — تقديم تبريرات",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/visit-justifications",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"visit-justifications"
+							]
+						},
+						"description": "الصلاحية: لا شيء. المفتاح رقم صفّ خط السير، النص 5-250 حرفاً.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"justifications\": {\n        \"{{row_id}}\": \"العميل كان مغلقاً طوال اليوم\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "My Justifications — تبريراتي",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/visit-justifications?page=1&perPage=15",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"visit-justifications"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"disabled": false,
+									"description": ""
+								},
+								{
+									"key": "perPage",
+									"value": "15",
+									"disabled": false,
+									"description": ""
+								}
+							]
+						},
+						"description": "الصلاحية: clients_visit_justifications_view_own | clients_visit_justifications_view_all"
+					},
+					"response": []
+				},
+				{
+					"name": "Justification Details — تفاصيل التبرير",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/visit-justifications/{{row_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"visit-justifications",
+								"{{row_id}}"
+							]
+						},
+						"description": "الصلاحية: clients_visit_justifications_view_own | clients_visit_justifications_view_all"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Justification — تعديل التبرير",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/visit-justifications/{{row_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"visit-justifications",
+								"{{row_id}}"
+							]
+						},
+						"description": "الصلاحية: clients_visit_justifications_view_own | clients_visit_justifications_view_all — لا يُعدَّل المعتمَد.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"justification\": \"العميل كان مغلقاً بسبب إجازة\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Notifications — الإشعارات",
+			"item": [
+				{
+					"name": "Notification Details — تفاصيل الإشعار",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/notifications/{{notification_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"notifications",
+								"{{notification_id}}"
+							]
+						},
+						"description": "الصلاحية: sales.notifications.view + ميزة الباقة notifications."
+					},
+					"response": []
+				},
+				{
+					"name": "Reply Notification — الرد على الإشعار",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/notifications/{{notification_id}}/reply",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"notifications",
+								"{{notification_id}}",
+								"reply"
+							]
+						},
+						"description": "الصلاحية: sales.notifications.reply + (notifications_reply_to_notifications | data_scope_all) + ميزة الباقة notifications.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"replyMessage\": \"تم الاطّلاع، شكراً\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Tracking — تتبّع الموقع",
+			"item": [
+				{
+					"name": "Send Location — إرسال الموقع",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/tracking/location",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tracking",
+								"location"
+							]
+						},
+						"description": "الصلاحية: clients_itinerary_edit — أو { points: [ { latitude, longitude, recordedAt } ] } حتى 100. 30 طلباً/دقيقة.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"latitude\": 24.7136,\n    \"longitude\": 46.6753\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Path — مسار اليوم",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/tracking/path?date=&employeeId=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tracking",
+								"path"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "",
+									"disabled": true,
+									"description": "YYYY-MM-DD"
+								},
+								{
+									"key": "employeeId",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								}
+							]
+						},
+						"description": "الصلاحية: clients_itinerary_view | clients_view_by_daily_itinerary"
+					},
+					"response": []
+				},
+				{
+					"name": "Team Locations — مواقع الفريق",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/tracking/team",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tracking",
+								"team"
+							]
+						},
+						"description": "الصلاحية: clients_itinerary_view | clients_view_by_daily_itinerary"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:4000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "client_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "visit_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "note_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "row_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "notification_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

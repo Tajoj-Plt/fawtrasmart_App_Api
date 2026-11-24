@@ -1,0 +1,1435 @@
+{
+	"info": {
+		"_postman_id": "3c7e1a52-8d4b-4f0e-9b61-2a5f0d9c7e18",
+		"name": "FawtraSmart Mobile — Stock (Node)",
+		"description": "Stock section of the FawtraSmart mobile backend (Node.js / Express), base `{{base_url}}/api/v1`.\n\nSuggested order:\n1) Auth → Login (stores token)\n2) Warehouses → List Warehouses (stores warehouse_id)\n3) Permits → Create Data (stores warehouse_id and product_id), then Add Addition Permit (stores permit_id)\n4) Approval → Approve (or Reject), then Cancel Approval\n5) Price lists → Add Price List (stores price_list_id) → Add Product To List (stores item_id)\n\nEvery stock route needs the «إدارة المخزون» application enabled and the plan feature of its section (stock_storehouses / stock_warehouse_permits / stock_price_lists).\nRequest bodies are camelCase; permit lines are items: [{ productId, quantity, unitPrice, total }] — in multipart a JSON string or items[0][productId] ….\nEvery request sends Accept: application/json. Responses: { success, data } / { success, message, data }; errors: { success:false, error:{ code, message, details? } }.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login — تسجيل الدخول",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Fill email and password. Stores data.accessToken into the collection variable token.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"\",\n    \"password\": \"\",\n    \"device\": {\n        \"id\": \"postman\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"if (json && json.data && json.data.accessToken) {",
+									"    pm.collectionVariables.set(\"token\", json.data.accessToken);",
+									"    console.log(\"Token saved to collection variable.\");",
+									"}"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Warehouses — المستودعات",
+			"item": [
+				{
+					"name": "List Warehouses — قائمة المستودعات",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/warehouses?page=1&perPage=10&search=&status=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"warehouses"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "perPage",
+									"value": "10"
+								},
+								{
+									"key": "search",
+									"value": ""
+								},
+								{
+									"key": "status",
+									"value": ""
+								}
+							]
+						},
+						"description": "الصلاحية: stock.warehouses.view — ميزة الباقة stock_storehouses. يحفظ أول مستودع في warehouse_id."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.items[0].id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"warehouse_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Warehouse Details — تفاصيل المستودع",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/warehouses/{{warehouse_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"warehouses",
+								"{{warehouse_id}}"
+							]
+						},
+						"description": "الصلاحية: stock.warehouses.view + stock.warehouses.show — الكميات والقيمة ورصيد الحساب والسجل."
+					},
+					"response": []
+				},
+				{
+					"name": "Warehouse Movements — حركات المستودع",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/warehouses/{{warehouse_id}}/movements?keywords=&category=&operationType=incoming",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"warehouses",
+								"{{warehouse_id}}",
+								"movements"
+							],
+							"query": [
+								{
+									"key": "keywords",
+									"value": "",
+									"disabled": true,
+									"description": "product name"
+								},
+								{
+									"key": "category",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "operationType",
+									"value": "incoming",
+									"disabled": true,
+									"description": "incoming / outgoing / transfer"
+								}
+							]
+						},
+						"description": "الصلاحية: stock.reports.summary_movement"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Statement — الكشف المخزني",
+			"item": [
+				{
+					"name": "Statement Warehouses — مستودعات الكشف",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/statement/warehouses",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"statement",
+								"warehouses"
+							]
+						},
+						"description": "الصلاحية: stock.reports.employee_statement"
+					},
+					"response": []
+				},
+				{
+					"name": "Warehouse Statement — الكشف المخزني",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/statement?warehouse={{warehouse_id}}&startDate=2026-09-01&endDate=2026-09-30&periodId=all&product={{product_id}}&category=&brand=&permissionSource=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"statement"
+							],
+							"query": [
+								{
+									"key": "warehouse",
+									"value": "{{warehouse_id}}",
+									"disabled": false,
+									"description": ""
+								},
+								{
+									"key": "startDate",
+									"value": "2026-09-01",
+									"disabled": false,
+									"description": "YYYY-MM-DD"
+								},
+								{
+									"key": "endDate",
+									"value": "2026-09-30",
+									"disabled": false,
+									"description": "YYYY-MM-DD"
+								},
+								{
+									"key": "periodId",
+									"value": "all",
+									"disabled": true,
+									"description": "all / none / year:{id} / {periodId}"
+								},
+								{
+									"key": "product",
+									"value": "{{product_id}}",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "category",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "brand",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "permissionSource",
+									"value": "",
+									"disabled": true,
+									"description": "e.g. 1 addition, 2 disbursement, 13 transfer, 26 opening"
+								}
+							]
+						},
+						"description": "الصلاحية: stock.reports.employee_statement — مستودعٌ خارج النطاق يعود إلى أوّل مستودعٍ متاح."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Permits — الأذون المخزنية",
+			"item": [
+				{
+					"name": "List Permits — قائمة الأذون",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/permits?page=1&perPage=10&search=&status=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"permits"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "perPage",
+									"value": "10"
+								},
+								{
+									"key": "search",
+									"value": ""
+								},
+								{
+									"key": "status",
+									"value": ""
+								}
+							]
+						},
+						"description": "الصلاحية: stock.permits.view — ميزة الباقة stock_warehouse_permits. currency غائب = عملة النظام، وفارغ = كل العملات. periodId الافتراضي السنة المالية الجارية."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.items[0].id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"permit_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Create Data — بيانات شاشة الإنشاء",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/permits/create-data?type=1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"permits",
+								"create-data"
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "1",
+									"disabled": false,
+									"description": "1 addition / 2 disbursement / 3 transfer / 4 opening"
+								}
+							]
+						},
+						"description": "الصلاحية: صلاحية إنشاء النوع (stock.permits.create_addition | create_disbursement | create_transfer | create_opening). serialNumber معاينة فقط. يحفظ أول مستودع وأول صنف."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.warehouses[0].id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"warehouse_id\", v); } } catch (e) {}",
+									"try { const v = json.data.products[0].id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"product_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Product Stock — رصيد الصنف",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/permits/product-stock/{{warehouse_id}}/{{product_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"permits",
+								"product-stock",
+								"{{warehouse_id}}",
+								"{{product_id}}"
+							]
+						},
+						"description": "الصلاحية: stock.permits.view — مجموع رصيد الصنف في المستودع."
+					},
+					"response": []
+				},
+				{
+					"name": "Permit Details — تفاصيل الإذن",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/permits/{{permit_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"permits",
+								"{{permit_id}}"
+							]
+						},
+						"description": "الصلاحية: stock.permits.show"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Addition Permit — إذن إضافة",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/permits",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"permits"
+							]
+						},
+						"description": "الصلاحية: stock.permits.create_addition — حدّ الباقة warehouse_permits. الرقم يصدره الخادم؛ الكمية تتحرّك عند الاعتماد.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"permissionType\": 1,\n    \"permissionDate\": \"2026-09-27\",\n    \"warehouseId\": {{warehouse_id}},\n    \"grandTotal\": 250,\n    \"details\": \"توريد يدوي\",\n    \"items\": [\n        {\n            \"productId\": {{product_id}},\n            \"quantity\": 100,\n            \"unitPrice\": 2.5,\n            \"total\": 250\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"permit_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Add Disbursement Permit — إذن صرف",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/permits",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"permits"
+							]
+						},
+						"description": "الصلاحية: stock.permits.create_disbursement — يُرفض إن كان رصيد المستودع أقل من الكمية (INSUFFICIENT_STOCK).",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"permissionType\": 2,\n    \"permissionDate\": \"2026-09-27\",\n    \"warehouseId\": {{warehouse_id}},\n    \"grandTotal\": 12.5,\n    \"details\": \"صرف عيّنات\",\n    \"items\": [\n        {\n            \"productId\": {{product_id}},\n            \"quantity\": 5,\n            \"unitPrice\": 2.5,\n            \"total\": 12.5\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"permit_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Add Transfer Permit — إذن تحويل",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/permits",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"permits"
+							]
+						},
+						"description": "الصلاحية: stock.permits.create_transfer — fromWarehouseId و toWarehouseId مختلفان؛ الرصيد يُفحص في المستودع المصدر.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"permissionType\": 3,\n    \"permissionDate\": \"2026-09-27\",\n    \"fromWarehouseId\": {{warehouse_id}},\n    \"toWarehouseId\": 4,\n    \"grandTotal\": 25,\n    \"details\": \"تحويل إلى مستودع الفرع\",\n    \"items\": [\n        {\n            \"productId\": {{product_id}},\n            \"quantity\": 10,\n            \"unitPrice\": 2.5,\n            \"total\": 25\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"permit_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Add Opening Balance — رصيد افتتاحي",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/permits",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"permits"
+							]
+						},
+						"description": "الصلاحية: stock.permits.create_opening — يُعتمد في معاملة الحفظ نفسها (قيد رصيد افتتاحي + حدّ journal_entries).",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"permissionType\": 4,\n    \"permissionDate\": \"2026-09-27\",\n    \"warehouseId\": {{warehouse_id}},\n    \"grandTotal\": 200,\n    \"details\": \"رصيد افتتاحي\",\n    \"items\": [\n        {\n            \"productId\": {{product_id}},\n            \"quantity\": 80,\n            \"unitPrice\": 2.5,\n            \"total\": 200\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"permit_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Add Permit With Attachment — إذن بمرفق",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/permits",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"permits"
+							]
+						},
+						"description": "multipart/form-data — items نصّ JSON للمصفوفة (أو items[0][productId] …). attachments: JPEG / PNG / PDF حتى 5 ميغابايت، يُرفع إلى النظام في assets/uploads/warehouse.",
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "permissionType",
+									"value": "1",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "permissionDate",
+									"value": "2026-09-27",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "warehouseId",
+									"value": "{{warehouse_id}}",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "grandTotal",
+									"value": "250",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "details",
+									"value": "توريد بفاتورة المورد",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "items",
+									"value": "[{\"productId\": {{product_id}}, \"quantity\": 100, \"unitPrice\": 2.5, \"total\": 250}]",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "attachments",
+									"type": "file",
+									"src": [],
+									"disabled": false
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"permit_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Update Permit — تعديل إذن",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/permits/{{permit_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"permits",
+								"{{permit_id}}"
+							]
+						},
+						"description": "الصلاحية: stock.permits.edit + صلاحية إنشاء النوع — الإذن المعلَّق فقط؛ الرأس والبنود تُستبدل والرقم يبقى.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"permissionType\": 1,\n    \"permissionDate\": \"2026-09-27\",\n    \"warehouseId\": {{warehouse_id}},\n    \"grandTotal\": 300,\n    \"details\": \"توريد يدوي — معدَّل\",\n    \"items\": [\n        {\n            \"productId\": {{product_id}},\n            \"quantity\": 120,\n            \"unitPrice\": 2.5,\n            \"total\": 300\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Permit (multipart) — تعديل بمرفق",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/permits/{{permit_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"permits",
+								"{{permit_id}}"
+							]
+						},
+						"description": "POST بديلٌ لـ PUT في النماذج متعدّدة الأجزاء — المرفق اختياري ويستبدل السابق.",
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "permissionType",
+									"value": "1",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "permissionDate",
+									"value": "2026-09-27",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "warehouseId",
+									"value": "{{warehouse_id}}",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "grandTotal",
+									"value": "300",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "details",
+									"value": "توريد يدوي — معدَّل",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "items[0][productId]",
+									"value": "{{product_id}}",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "items[0][quantity]",
+									"value": "120",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "items[0][unitPrice]",
+									"value": "2.5",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "items[0][total]",
+									"value": "300",
+									"type": "text",
+									"disabled": false
+								},
+								{
+									"key": "attachments",
+									"type": "file",
+									"src": [],
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Permit — حذف إذن",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/permits/{{permit_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"permits",
+								"{{permit_id}}"
+							]
+						},
+						"description": "الصلاحية: stock.permits.delete — المعلَّق أو المرفوض فقط."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Approval — الاعتماد",
+			"item": [
+				{
+					"name": "Approve Permit — اعتماد",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/permits/{{permit_id}}/approve",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"permits",
+								"{{permit_id}}",
+								"approve"
+							]
+						},
+						"description": "الصلاحية: stock.permits.approve — تحريك الكميات والقيد المحاسبي AW-YYYY-NNNNN وحدّ journal_entries، في معاملةٍ واحدة."
+					},
+					"response": []
+				},
+				{
+					"name": "Reject Permit — رفض",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/permits/{{permit_id}}/reject",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"permits",
+								"{{permit_id}}",
+								"reject"
+							]
+						},
+						"description": "الصلاحية: stock.permits.reject — reason اختياري (أو rejectionReason).",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"reason\": \"الكمية غير مطابقة لفاتورة المورد\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Approval — إلغاء الاعتماد",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/permits/{{permit_id}}/cancel-approval",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"permits",
+								"{{permit_id}}",
+								"cancel-approval"
+							]
+						},
+						"description": "الصلاحية: stock.permits.cancel_approval — إرجاع الكميات وقيود عكسية بتاريخ اليوم، والإذن يعود معلَّقاً."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Price lists — قوائم الأسعار",
+			"item": [
+				{
+					"name": "List Price Lists — قوائم الأسعار",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/price-lists?page=1&keywords=&product={{product_id}}&category=&brand=&status=0",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"price-lists"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"disabled": false,
+									"description": ""
+								},
+								{
+									"key": "keywords",
+									"value": "",
+									"disabled": true,
+									"description": "name"
+								},
+								{
+									"key": "product",
+									"value": "{{product_id}}",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "category",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "brand",
+									"value": "",
+									"disabled": true,
+									"description": ""
+								},
+								{
+									"key": "status",
+									"value": "0",
+									"disabled": true,
+									"description": "0 active / 1 stopped"
+								}
+							]
+						},
+						"description": "الصلاحية: stock.price_lists.view — ميزة الباقة stock_price_lists. 10 في الصفحة."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.items[0].id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"price_list_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Add Price List — إضافة قائمة",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/price-lists",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"price-lists"
+							]
+						},
+						"description": "الصلاحية: stock.price_lists.create — حدّ الباقة price_lists. status: 0 نشط / 1 موقوف (افتراضي 0).",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"أسعار الجملة\",\n    \"status\": 0\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.id; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"price_list_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Price List Details — تفاصيل القائمة",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/price-lists/{{price_list_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"price-lists",
+								"{{price_list_id}}"
+							]
+						},
+						"description": "الصلاحية: stock.price_lists.show — items[].itemId لحذف السطر، و availableProducts مع stock.price_lists.manage_products."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.items[0].itemId; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"item_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Update Price List — تعديل قائمة",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/price-lists/{{price_list_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"price-lists",
+								"{{price_list_id}}"
+							]
+						},
+						"description": "الصلاحية: stock.price_lists.edit — status الغائب يبقى كما هو.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"أسعار الجملة — الربع الرابع\",\n    \"status\": 0\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Product To List — إضافة صنف",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/price-lists/{{price_list_id}}/products",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"price-lists",
+								"{{price_list_id}}",
+								"products"
+							]
+						},
+						"description": "الصلاحية: stock.price_lists.manage_products — كما في الويب يُكتب salePrice على products.sale_price (سعر البيع العامّ للصنف).",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"productId\": {{product_id}},\n    \"salePrice\": 2.25\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const json = pm.response.json();",
+									"try { const v = json.data.itemId; if (v !== undefined && v !== null) { pm.collectionVariables.set(\"item_id\", v); } } catch (e) {}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Remove Product From List — حذف صنف",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/price-lists/products/{{item_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"price-lists",
+								"products",
+								"{{item_id}}"
+							]
+						},
+						"description": "الصلاحية: stock.price_lists.manage_products — itemId من تفاصيل القائمة لا معرّف الصنف."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Price List — حذف قائمة",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/stock/price-lists/{{price_list_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock",
+								"price-lists",
+								"{{price_list_id}}"
+							]
+						},
+						"description": "الصلاحية: stock.price_lists.delete"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:4000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "warehouse_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "product_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "permit_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "price_list_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "item_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
